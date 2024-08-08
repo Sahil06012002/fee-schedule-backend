@@ -6,11 +6,13 @@ app = FastAPI()
 app.include_router(file_router, prefix="/files")
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/getFileData")
+def getFileData():
+    data = {
+      1: { id: 1, "name": "John Doe", "email": "john@example.com" },
+      2: { id: 2, "name": "Jane Smith", "email": "jane@example.com" },
+      3: { id: 3, "name": "Michael Brown", "email": "michael@example.com" },
+    };
+    return data
