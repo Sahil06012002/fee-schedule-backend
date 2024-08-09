@@ -1,3 +1,5 @@
+import datetime
+import re
 from fastapi import File, UploadFile, Depends, HTTPException
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
@@ -26,11 +28,23 @@ class TableManager:
                 max_unique_count = unique_count
                 hashable_col = col
         return hashable_col
-
+    
+    def generate_table_name(self,base_name):
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            return f"{base_name}_{timestamp}"
+    
     async def insert_table(self,db : Database, file: UploadFile = File(...)) :
         content = await file.read()
-        file_name = file.filename
-        table_name = file_name.split(".")[0].lower()
+
+        import datetime
+
+        
+
+        file_name = file.filename.split(".")[0].lower()
+        table_prefix = re.sub(r'[^a-z0-9]', '_', file_name)
+        # Example usage:
+        table_name = self.generate_table_name(table_prefix)
+        
         df = pd.read_excel(content)
         hashable_cols = []
 
@@ -51,8 +65,19 @@ class TableManager:
 
                 # Insert the metadata
                 hashable_cols_str = ",".join(hashable_cols)
-                query = text("INSERT INTO table_details (table_name, hashable_cols) VALUES (:table_name, :hashable_cols)")
-                db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
+                query = text("""
+                                INSERT INTO table_details (table_name, hashable_cols) 
+                                VALUES (:table_name, :hashable_cols)
+                                RETURNING id
+                            """)
+
+                # Execute the query and fetch the returned ID
+                result = db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
+
+                # Fetch the inserted ID
+                inserted_id = result.scalar()
+                # query = text("INSERT INTO table_details (table_name, hashable_cols) VALUES (:table_name, :hashable_cols)")
+                # db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
                 
                 # Commit the transaction
                 # transaction.commit()
@@ -64,7 +89,9 @@ class TableManager:
         # send_df.set_index("hash", inplace=True)
 
         print(send_df)
-        return send_df.to_dict(orient='records')
+        return send_df.to_dict(orient='records'),inserted_id
+    
+
     
     def get_table(self,db,table_id) :
         #return all the table data
