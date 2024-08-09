@@ -22,8 +22,8 @@ def hash_row(row, columns):
 
 
 #funciton to update the df with with the hash values
-def add_hash_col(df) : 
-    df['hash'] = df.apply(lambda row: hash_row(row, ['role' , 'code']), axis=1)
+def add_hash_col(df,hashable_cols) : 
+    df['hash'] = df.apply(lambda row: hash_row(row, hashable_cols), axis=1)
     return df
 
 

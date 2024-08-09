@@ -5,7 +5,8 @@ import pandas as pd
 import json
 import numpy as np
 from enums import Operations,Axis
-from utils.helper import dtype_to_postgres,hash_row,add_hash_col,convert_to_python_type
+from utils.helper import dtype_to_postgres,add_hash_col,convert_to_python_type
+from services.table_manager import TableManager
 
 DATABASE = "demo_db"
 HOST = "ep-falling-wildflower-a5hi1gh6-pooler.us-east-2.aws.neon.tech"
@@ -25,16 +26,13 @@ conn = psycopg2.connect(
 file_router = APIRouter()
 
 @file_router.post("/upload")
-async def upload_file(file: UploadFile = File(...)) :
-    content = await file.read()
-    df = pd.read_excel(content)
-    #insert file data into db
-    print(df)
-    return {"upload": "file"}
+async def upload_file(file: UploadFile = File(...), table_manager_obj: TableManager = Depends(TableManager)):
+    response = await table_manager_obj.insert_table(file)
+    return response
 
 
 @file_router.post("/compare")
-async def calculate_dif(cmp_file: UploadFile = File(...)) : 
+async def calculate_dif(table_id: int ,cmp_file: UploadFile = File(...)) : 
     #get the file from the db and a excel from user 
     cur = conn.cursor()
     
