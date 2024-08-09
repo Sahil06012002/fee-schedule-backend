@@ -19,13 +19,9 @@ class Comparision :
         df = pd.DataFrame(rows, columns=columns)
         return df
     
-    async def compare(self,db: Database,table_name: str , cmp_file : UploadFile) :
-        old_df = self.fetch_table_from_db(table_name ,db)
-
-        print(old_df)
-
-        content = await  cmp_file.read()
-        new_df = pd.read_excel(content)
+    async def create_df_from_excel(self,table_name : str,cmp_file : UploadFile,db : Database) :
+        content = await cmp_file.read()
+        df = pd.read_excel(content)
         #new df doesnt have hash column we have to retrieve the hash col from the table meta data add apply hash col
         hashable_cols = []
         query = text("SELECT hashable_cols FROM table_details WHERE table_name = :table_name")
@@ -36,7 +32,15 @@ class Comparision :
         hashable_cols = query_data[0].split(",")
         print(hashable_cols)
  
-        new_df = add_hash_col(new_df,hashable_cols)
+        df = add_hash_col(df,hashable_cols)
+        return df
+    
+
+    async def compare(self,db: Database,table_name: str , cmp_file : UploadFile) :
+        old_df = self.fetch_table_from_db(table_name ,db)
+        print(old_df)
+
+        new_df =await self.create_df_from_excel(table_name,cmp_file,db)
         print(new_df)
 
         changes = []
@@ -44,6 +48,7 @@ class Comparision :
 
         # Set the unique code column as the index for comparison
         new_df.set_index("hash", inplace=True)
+
         old_df.set_index("hash", inplace=True)
         # Extract unique codes
         old_codes = old_df.index
@@ -145,6 +150,6 @@ class Comparision :
 
 
         print(table_changes)
-        return {"cell_changes": changes, "column_changes": table_changes}
+        return {"cell_changes": changes, "table_changes": table_changes}
  
 
