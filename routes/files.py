@@ -8,27 +8,17 @@ from enums import Operations,Axis
 from utils.helper import dtype_to_postgres,add_hash_col,convert_to_python_type
 from services.table_manager import TableManager
 
-DATABASE = "demo_db"
-HOST = "ep-falling-wildflower-a5hi1gh6-pooler.us-east-2.aws.neon.tech"
-USER = "demo_db_owner"
-PASSWORD = "9GbDkis2zVYX"
-PORT = "5432"
+from db import Database, get_db, engine
 
-conn = psycopg2.connect(
-        dbname=DATABASE,
-        user=USER,
-        password=PASSWORD,
-        host=HOST,
-        port=PORT
-    )
+
 
 
 file_router = APIRouter()
 
 @file_router.post("/upload")
-async def upload_file(file: UploadFile = File(...), table_manager_obj: TableManager = Depends(TableManager)):
-    response = await table_manager_obj.insert_table(file)
-    return response
+async def upload_file(file: UploadFile = File(...), table_manager_obj: TableManager = Depends(TableManager),db : Database = Depends(get_db)):
+    response = await table_manager_obj.insert_table(db,file)
+    return {"data" : response}
 
 
 @file_router.post("/compare")

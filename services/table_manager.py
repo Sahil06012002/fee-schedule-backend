@@ -2,6 +2,7 @@ from fastapi import File, UploadFile, Depends, HTTPException
 import pandas as pd
 from sqlalchemy.exc import SQLAlchemyError
 from db import Database, get_db, engine
+from sqlalchemy.sql import text
 from utils.helper import add_hash_col
 
 class TableManager:
@@ -26,7 +27,7 @@ class TableManager:
                 hashable_col = col
         return hashable_col
 
-    async def insert_table(self, file: UploadFile = File(...), db: Database = next(get_db())) -> dict:
+    async def insert_table(self,db : Database, file: UploadFile = File(...)) :
         content = await file.read()
         file_name = file.filename
         table_name = file_name.split(".")[0].lower()
@@ -41,16 +42,29 @@ class TableManager:
 
         df = add_hash_col(df, hashable_cols)
         df.columns = [col.lower() for col in df.columns]
-        df.to_sql(table_name, engine, index=False, if_exists='replace')
-
-        hashable_cols_str = ",".join(hashable_cols)
-        query = "INSERT INTO table_details (table_name, hashable_cols) VALUES (:table_name, :hashable_cols)"
-
+        send_df = df
         try:
-            db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
-            db.commit()
-        except SQLAlchemyError as e:
-            db.rollback()
-            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+            # with db.begin() as transaction:
+                # Create the table
+                df.to_sql(table_name, engine, index=False, if_exists='replace')
+                print(df)
 
-        return {"inserted": table_name}
+                # Insert the metadata
+                hashable_cols_str = ",".join(hashable_cols)
+                query = text("INSERT INTO table_details (table_name, hashable_cols) VALUES (:table_name, :hashable_cols)")
+                db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
+                
+                # Commit the transaction
+                # transaction.commit()
+
+        except SQLAlchemyError as e:
+            # Rollback the transaction in case of an error
+            # transaction.rollback()
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        send_df.set_index("hash", inplace=True)
+        return send_df.to_dict()
+    
+    def get_table(self,db,table_id) :
+        #return all the table data
+        return 
+

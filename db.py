@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
+
 import os
 from dotenv import load_dotenv
 
@@ -21,12 +22,14 @@ class Database:
         self.db.close()
 
     def execute(self, query, params=None):
-        if params:
-            result = self.db.execute(query, params)
-        else:
+        if params is None:
             result = self.db.execute(query)
+        else:
+            result = self.db.execute(query, params)
         self.db.commit()
         return result
+    def begin(self):
+        return self.db.begin()
 
 
 def get_db():
