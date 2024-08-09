@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from db import Database, get_db, engine
 from sqlalchemy.sql import text
 from utils.helper import add_hash_col
+import datetime
 
 class TableManager:
     def extract_code_colname(self, excel_table):
@@ -36,10 +37,6 @@ class TableManager:
     async def insert_table(self,db : Database, file: UploadFile = File(...)) :
         content = await file.read()
 
-        import datetime
-
-        
-
         file_name = file.filename.split(".")[0].lower()
         table_prefix = re.sub(r'[^a-z0-9]', '_', file_name)
         # Example usage:
@@ -65,19 +62,8 @@ class TableManager:
 
                 # Insert the metadata
                 hashable_cols_str = ",".join(hashable_cols)
-                query = text("""
-                                INSERT INTO table_details (table_name, hashable_cols) 
-                                VALUES (:table_name, :hashable_cols)
-                                RETURNING id
-                            """)
-
-                # Execute the query and fetch the returned ID
-                result = db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
-
-                # Fetch the inserted ID
-                inserted_id = result.scalar()
-                # query = text("INSERT INTO table_details (table_name, hashable_cols) VALUES (:table_name, :hashable_cols)")
-                # db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str})
+                query = text("INSERT INTO table_details (table_name, hashable_cols,file_name) VALUES (:table_name, :hashable_cols,:file_name)")
+                db.execute(query, {"table_name": table_name, "hashable_cols": hashable_cols_str,"file_name" : file.filename})
                 
                 # Commit the transaction
                 # transaction.commit()
@@ -89,7 +75,7 @@ class TableManager:
         # send_df.set_index("hash", inplace=True)
 
         print(send_df)
-        return send_df.to_dict(orient='records'),inserted_id
+        return send_df.to_dict(orient='records'),table_name,file.filename
     
 
     

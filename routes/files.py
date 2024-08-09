@@ -12,8 +12,8 @@ file_router = APIRouter()
 
 @file_router.post("/upload")
 async def upload_file(file: UploadFile = File(...), table_manager_obj: TableManager = Depends(TableManager),db : Database = Depends(get_db)):
-    data,id = await table_manager_obj.insert_table(db,file)
-    return {"data" : data, "table_id" : id}
+    data,table_name,file_name = await table_manager_obj.insert_table(db,file)
+    return {"data" : data, "table_name" : table_name, "file_name" : file_name}
 
 
 @file_router.post("/compare/{table_name}")
