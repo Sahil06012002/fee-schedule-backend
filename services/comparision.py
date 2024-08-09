@@ -44,20 +44,7 @@ class Comparision :
 
         # Set the unique code column as the index for comparison
         new_df.set_index("hash", inplace=True)
-        print("-----------------------------------------------")
-        print(new_df.index.tolist())
         old_df.set_index("hash", inplace=True)
-        print("-----------------------------------------------")
-        print(old_df.index.tolist())
-        
-
-
-
-
-
-
-        original_table = old_df
-        res_tab = original_table.to_dict()
         # Extract unique codes
         old_codes = old_df.index
         new_codes = new_df.index
@@ -154,15 +141,7 @@ class Comparision :
                 "operation": Operations.DELETE.name,
                 "values": json.dumps(deleted_rows)
                 })    
-                # for col in old_df.columns:
-                #     old_value = convert_to_python_type(old_df.at[code, col])
-                #     changes.append({
-                #         "type": Operations.DELETE.name,
-                #         "code": code,
-                #         "column_name": col,
-                #         "old_value": old_value,
-                #         "new_val" : None
-                #     })
+
 
 
         print(table_changes)
