@@ -6,21 +6,21 @@ from db import Database
 from enums import Axis, Operations
 from utils.helper import add_hash_col, convert_to_python_type, dtype_to_postgres
 class Comparision : 
-    async def compare(self,db: Database,table_name: str , cmp_file : UploadFile) :
-        print("comparing")
-        #get the table name corresponding 
+    def fetch_table_from_db(self,table_name : str,db :Database) :
         query = text(f"SELECT * FROM {table_name}")
         try :
             result = db.execute(query)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-        # Fetch the data
         rows = result.fetchall()
 
-        # Create DataFrame from the fetched data
         columns = result.keys()  # Retrieve column names from the result
 
-        old_df = pd.DataFrame(rows, columns=columns)
+        df = pd.DataFrame(rows, columns=columns)
+        return df
+    
+    async def compare(self,db: Database,table_name: str , cmp_file : UploadFile) :
+        old_df = self.fetch_table_from_db(table_name ,db)
 
         print(old_df)
 
