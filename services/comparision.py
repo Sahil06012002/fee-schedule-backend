@@ -153,3 +153,7 @@ class Comparision :
         return {"cell_changes": changes, "table_changes": table_changes}
  
 
+    def get_table_data(self,table_name,db : Database) : 
+        df = self.fetch_table_from_db(table_name,db)
+        df.to_dict(orient='records')
+        return df

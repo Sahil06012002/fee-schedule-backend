@@ -77,9 +77,16 @@ class TableManager:
         print(send_df)
         return send_df.to_dict(orient='records'),table_name,file.filename
     
-
     
-    def get_table(self,db,table_id) :
+    
+    def get_all_files(self,db : Database) :
         #return all the table data
-        return 
+        query = text(f"SELECT table_name, file_name FROM table_details")
+        result = db.execute(query)
+        print("------------------------------------------")
+        rows = result.fetchall()
+        print(rows)
+        files = [{"table_name": row.table_name, "file_name": row.file_name} for row in rows]
+
+        return files
 
