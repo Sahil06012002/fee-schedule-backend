@@ -61,8 +61,10 @@ class TableManager:
             # Rollback the transaction in case of an error
             # transaction.rollback()
             raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-        send_df.set_index("hash", inplace=True)
-        return send_df.to_dict()
+        # send_df.set_index("hash", inplace=True)
+
+        print(send_df)
+        return send_df.to_dict(orient='records')
     
     def get_table(self,db,table_id) :
         #return all the table data
