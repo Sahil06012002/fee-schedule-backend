@@ -17,6 +17,7 @@ class Comparision :
         columns = result.keys()  # Retrieve column names from the result
 
         df = pd.DataFrame(rows, columns=columns)
+        print(df)
         return df
     
     async def create_df_from_excel(self,table_name : str,cmp_file : UploadFile,db : Database) :
@@ -155,5 +156,5 @@ class Comparision :
 
     def get_table_data(self,table_name,db : Database) : 
         df = self.fetch_table_from_db(table_name,db)
-        df.to_dict(orient='records')
-        return df
+        json_data=df.to_dict(orient='records')
+        return json_data
